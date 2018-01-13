@@ -1,0 +1,59 @@
+# *_*coding:utf-8 *_*
+from bs4 import BeautifulSoup
+import requests
+import time
+import json
+
+page_link = []
+def get_more_url(page_number):
+    for each_number in range(1, page_number):
+        full_url = 'http://bj.xiaozhu.com/chaoyang-duanzufang-p{}-8/'.format(str(each_number))
+        wb_data = requests.get(full_url)
+        soup = BeautifulSoup(wb_data.text, 'lxml')
+
+        for link in soup.select('#page_list > ul > li > a'):
+            page_link.append(link.get('href'))
+
+    pass
+
+def print_gender(class_name):
+    if class_name == 'member_ico':
+        return 'man'
+    elif class_name == 'member_ico1':
+        return 'woman'
+
+    pass
+
+def parse_url(url):
+    wb_data = requests.get(url)
+    soup = BeautifulSoup(wb_data.text, 'lxml')
+
+    title = soup.select('div.con_l > div.pho_info > h4')[0].text.strip()
+    addresses = soup.select('div.con_l > div.pho_info > p > span')[0].text.strip()
+    img = soup.select('img[id="curBigImage"]')[0].get('src')
+    prices = soup.select('#pricePart > div.day_l > span')[0].text
+    heads = soup.select('#floatRightBox > div.js_box.clearfix > div.member_pic > a > img')[0].get('src')
+    gender = soup.select('#floatRightBox > div.js_box.clearfix > div.member_pic > div')[0].get('class')[0]
+    names = soup.select('#floatRightBox > div.js_box.clearfix > div.w_240 > h6 > a')[0].text
+
+    data = {
+        'title': title,
+        'address': addresses,
+        'price': prices,
+        'houseImg': img,
+        'header': heads,
+        'gender': print_gender(gender),
+        'name': names
+    }
+    print data
+    print  json.dumps(data, encoding="utf8", ensure_ascii=False, sort_keys=False, indent=4)
+    time.sleep(2)
+    pass
+
+
+# 调用函数
+get_more_url(30)
+
+for each_link in page_link:
+    parse_url(each_link)
+    
